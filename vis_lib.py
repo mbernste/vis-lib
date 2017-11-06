@@ -12,8 +12,19 @@ def black_white_barplot(
     xcol, 
     ycol, 
     decimal=False, 
-    ax=None
+    ax=None,
     ):
+    """
+    Plot a black and white bar plot. 
+    Args:
+        data_frame: a pandas DataFrame
+        xcol: the categorical column to plot along the x axis
+        ycol: the numerical column to plot along the y axis
+        decimal: if true, use decimals in the height label
+            above each bar
+        ax: the matplotlib Axes object on which to draw the
+            figure
+    """
 
     clrs = ['#E5E7E9' for x in range(data_frame.shape[0])]
 
@@ -61,6 +72,69 @@ def black_white_barplot(
     sns.plt.tick_params(labelsize=13);
 
     return ax
+
+
+def black_white_double_barplot(
+    data_frame,
+    xcol,
+    ycol,
+    hue,
+    decimal=False,
+    ax=None,
+    ):
+    clrs = []
+    for i in range(data_frame.shape[0]):
+        clrs.append('#E5E7E9')
+        clrs.append('#737373')
+#    clrs = ['#E5E7E9' for x in range(data_frame.shape[0])]
+
+    sns.set_context(rc = {'patch.linewidth': 1.0})
+    sns.set_style("white", {'axes.grid' : False})
+    if ax:
+        ax = sns.barplot(
+            x=xcol,
+            y=ycol,
+            hue=hue,
+            palette=clrs,
+            data=data_frame,
+            ci=None,
+            ax=ax
+        )
+    else:
+        ax = sns.barplot(
+            x=xcol,
+            y=ycol,
+            hue=hue,
+            palette=clrs,
+            data=data_frame,
+            ci=None
+        )
+    sns.despine()
+
+    for p in ax.patches:
+        height = p.get_height()
+        y_lim = ax.get_ylim()[1]
+        if decimal:
+            ax.text(
+                p.get_x() + 0.25 * p.get_width(),
+                height + 0.025 * y_lim,
+                str(height),
+                fontsize=13
+            )
+        else:
+             ax.text(
+                p.get_x() + 0.25 * p.get_width(),
+                height + 0.025 * y_lim,
+                '%d' % height,
+                fontsize=13
+            )
+
+    sns.plt.ylabel(ycol, fontsize=15)
+    sns.plt.xlabel(xcol, fontsize=15)
+    sns.plt.tick_params(labelsize=13);
+
+    return ax
+
 
 
 def histogram(
@@ -280,7 +354,15 @@ def horizontal_bar_graph_clusters(
     sns.plt.tight_layout() 
     return fig, axarr
 
-def performance_comparison_scatterplot(data_frame, xcol, ycol, xlim=None, ylim=None, ax=None, title=None):
+def performance_comparison_scatterplot(
+        data_frame, 
+        xcol, 
+        ycol, 
+        xlim=None, 
+        ylim=None, 
+        ax=None, 
+        title=None
+    ):
 
     ax = sns.regplot(
         data=data_frame, 
