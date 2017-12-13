@@ -138,22 +138,25 @@ def black_white_double_barplot(
 
 
 def histogram(
-    data_points,
-    x_label,
-    y_label="Counts",
-    ax=None):
+        data_points,
+        x_label,
+        y_label="Counts",
+        ax=None,
+        label_heights=True
+    ):
 
     sns.distplot(data_points, hist=True, rug=False, kde=False, ax=ax)
-    for p in ax.patches:
-        height = p.get_height()
-        y_lim = ax.get_ylim()[1]
-        if height > 0:
-            ax.text(
-                p.get_x() + 0.25 * p.get_width(),
-                height + 0.025 * y_lim,
-                '%d' % height,
-                fontsize=13
-            )
+    if label_heights:
+        for p in ax.patches:
+            height = p.get_height()
+            y_lim = ax.get_ylim()[1]
+            if height > 0:
+                ax.text(
+                    p.get_x() + 0.25 * p.get_width(),
+                    height + 0.025 * y_lim,
+                    '%d' % height,
+                    fontsize=13
+                )
 
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
