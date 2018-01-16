@@ -475,6 +475,75 @@ def performance_comparison_scatterplot(
     if ylim:
         ax.set_ylim(ylim)
 
-    return ax
+
+def grid_performance_comparison_scatterplots(
+        variable_to_label_to_value_x,
+        variable_to_label_to_value_y,
+        x_name,
+        y_name,
+        variable_grid,
+        axarr,
+        x_lim_grid=None,
+        y_lim_grid=None
+    ):
+
+    x_vars = frozenset(variable_to_label_to_value_x.keys())
+    y_vars = frozenset(variable_to_label_to_value_y.keys())
+    assert x_vars == y_vars
+
+    variables = x_vars
+    labels = frozenset(
+        variable_to_label_to_value_x[list(variables)[0]].keys()
+    )
+    for var in variables:
+        labels_x = frozenset(variable_to_label_to_value_x[var])
+        labels_y = frozenset(variable_to_label_to_value_y[var])
+        assert labels_x == labels
+        assert labels_y == labels
+
+
+    variable_to_da = defaultdict(lambda: [])
+    for variable in variables:
+        for label in labels:
+            val_x = variable_to_label_to_value_x[variable][label]
+            val_y = variable_to_label_to_value_y[variable][label]
+            variable_to_da[variable].append((val_x, val_y))
+
+    variable_to_df = {}
+    for variable, da in variable_to_da.iteritems():
+        variable_to_df[variable] = pandas.DataFrame(
+            data=da,
+            columns=[x_name, y_name]
+        )
+
+    for r_i, row in enumerate(variable_grid):
+        for c_i, variable in enumerate(row):
+            ax = axarr[r_i][c_i]
+            df = variable_to_df[variable]
+            if x_lim_grid and y_lim_grid:
+                x_lim = x_lim_grid[r_i][c_i]
+                y_lim = x_lim_grid[r_i][c_i]
+                performance_comparison_scatterplot(
+                    df,
+                    xcol=x_name,
+                    ycol=y_name,
+                    title=variable,
+                    ax=ax,
+                    xlim=x_lim,
+                    ylim=y_lim   
+                )
+            else:
+                performance_comparison_scatterplot(
+                    df,
+                    xcol=x_name,
+                    ycol=y_name,
+                    title=variable,
+                    ax=ax
+                )
+        
+
+
+
+
 
 
