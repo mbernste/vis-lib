@@ -6,6 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas
 import numpy as np
+from collections import defaultdict
 
 def black_white_barplot(
     data_frame, 
@@ -75,12 +76,12 @@ def black_white_barplot(
 
 
 def black_white_double_barplot(
-    data_frame,
-    xcol,
-    ycol,
-    hue,
-    decimal=False,
-    ax=None,
+        data_frame,
+        xcol,
+        ycol,
+        hue,
+        decimal=False,
+        ax=None,
     ):
     clrs = []
     for i in range(data_frame.shape[0]):
@@ -164,21 +165,20 @@ def histogram(
     
 
 def single_var_strip_plot(
-    data_frame, 
-    xcol, 
-    ycol, 
-    x_lims=None, 
-    x_ticks=None,
-    label_y_axis=True,
-    label_x_axis=True,
-    y_tick_font_size=None,
-    x_grid=True,
-    dot_size=10,
-    ax=None, 
-    show=True,
-    x_label_font_size=20,
-    y_label_font_size=15,
-    x_tick_rotation=None
+        data_frame, 
+        xcol, 
+        ycol, 
+        x_lims=None, 
+        x_ticks=None,
+        label_y_axis=True,
+        label_x_axis=True,
+        y_tick_font_size=None,
+        x_grid=True,
+        dot_size=10,
+        ax=None, 
+        x_label_font_size=20,
+        y_label_font_size=15,
+        x_tick_rotation=None
     ):
 
     yticks = np.arange(0, data_frame.shape[0], 1)
@@ -232,22 +232,22 @@ def single_var_strip_plot(
     return ax
 
 def mult_var_strip_plot(
-    data_frame,
-    xcol,
-    ycol,
-    hue_col,
-    x_lims=None,
-    x_ticks=None,
-    label_y_axis=True,
-    label_x_axis=True,
-    y_tick_font_size=None,
-    x_grid=True,
-    dot_size=10,
-    ax=None,
-    show=True,
-    x_label_font_size=20,
-    y_label_font_size=15,
-    x_tick_rotation=None
+        data_frame,
+        xcol,
+        ycol,
+        hue_col,
+        x_lims=None,
+        x_ticks=None,
+        label_y_axis=True,
+        label_x_axis=True,
+        y_tick_font_size=None,
+        x_grid=True,
+        dot_size=10,
+        ax=None,
+        show=True,
+        x_label_font_size=20,
+        y_label_font_size=15,
+        x_tick_rotation=None
     ):
 
     yticks = np.arange(0, data_frame.shape[0], 1)
@@ -305,11 +305,11 @@ def mult_var_strip_plot(
 
 
 def horizontal_bar_graph_clusters(
-    label_to_df, 
-    xcol, 
-    ycol, 
-    hue=None, 
-    label_order=None
+        label_to_df, 
+        xcol, 
+        ycol, 
+        hue=None, 
+        label_order=None
     ):
 
     sns.set_context(rc = {'patch.linewidth': 0.0})
@@ -357,6 +357,87 @@ def horizontal_bar_graph_clusters(
     sns.plt.tight_layout() 
     return fig, axarr
 
+
+def side_by_side_single_var_strip_plots(
+        variable_to_label_to_value,
+        label_variable,
+        axarr,
+        variables_order=None,
+        x_lims=None
+    ):
+    """
+    Plot multiplie single-variable strip-plots side-by-side each
+    sharing the y-axis labels.
+    Args:
+        variable_to_label_to_value: a dictionary of dictionaries. The
+            keys of the outer dictionary are the variables being 
+            plotted in each strip-plot (e.g. precision or recall).
+            The keys of the inner dictionary are the labels and the
+            values are the values for that label and variable.
+        label_variable: the name of the variable of the labels
+            (e.g. cell-type)
+        axarr: an array of matplotlib Axes objects on which to draw
+            the strip plots. The length must match the length of the
+            variable_to_label_to_value dictionary.
+        x_lims: an array of tuples corresponding the x-axis limits
+            of each strip-plot
+    """
+
+    assert len(axarr) == len(variable_to_label_to_value)
+
+    if not variables_order:
+        variables_order = sorted(
+            list(variable_to_label_to_value.keys()) 
+        )
+
+    order_by_label_to_values = variable_to_label_to_value[variables_order[0]]
+    labels_order = sorted(
+        [
+            label
+            for label in order_by_label_to_values.keys()
+        ],
+        key=lambda x: order_by_label_to_values[x],
+        reverse=True
+    )
+
+    variable_to_da = defaultdict(lambda: [])
+    for variable in variables_order:
+        for label in labels_order:
+            value = variable_to_label_to_value[variable][label]
+            variable_to_da[variable].append((
+                label,
+                value
+            ))
+
+    variable_to_df = {}
+    for variable, da in variable_to_da.iteritems():
+        variable_to_df[variable] = pandas.DataFrame(
+            data=da,
+            columns=[
+                label_variable,
+                variable
+            ]
+        )
+
+    for var_i, variable in enumerate(variables_order):
+        df = variable_to_df[variable]
+        if x_lims:
+            single_var_strip_plot(
+                df,
+                variable,
+                label_variable,
+                x_lims=x_lims[var_i],
+                ax=axarr[var_i]
+            )
+        else:
+            single_var_strip_plot(
+                df,
+                variable,
+                label_variable,
+                ax=axarr[var_i]
+            )
+    
+    
 def performance_comparison_scatterplot(
         data_frame, 
         xcol, 
@@ -364,7 +445,8 @@ def performance_comparison_scatterplot(
         xlim=None, 
         ylim=None, 
         ax=None, 
-        title=None
+        title=None,
+        dot_size=50
     ):
 
     ax = sns.regplot(
@@ -374,7 +456,11 @@ def performance_comparison_scatterplot(
         fit_reg=False,
         ci=None, 
         scatter=True,
-        scatter_kws={"s": 50, "alpha": 0.5, "color":"blue"}, 
+        scatter_kws={
+            "s": dot_size, 
+            "alpha": 0.5, 
+            "color":"blue"
+        }, 
         ax=ax
     )
    
